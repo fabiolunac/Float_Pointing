@@ -1,0 +1,27 @@
+-------- IIR 1 coeffs --------
+b0: 0xf0e24dd3
+a1: 0xf4ffb7e9
+
+-------- IIR 2 coeffs --------
+b0: 0x74dcfaad
+b1: 0x746d9e84
+a1: 0x7543212e
+a2: 0x7449e1b1
+
+-------- IIR 3 coeffs --------
+b0: 0xf5e7f6fd
+b1: 0xf4594af5
+a1: 0xf272b021
+a2: 0x73d3b646
+
+-------- IIR 4 coeffs --------
+b0: 0x75d2d845
+a1: 0xf45d4952
+
+-------- IIR 5 coeffs --------
+b0: 0xf3410625
+a1: 0xf04086ae
+
+-------- IIR 6 coeffs --------
+b0: 0x6e6e099e
+a1: 0xe05f7cd2
