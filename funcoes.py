@@ -1,6 +1,60 @@
 import struct
 import math
 
+def f2mf_v1(va: str, nbmant: int, nbexpo: int) -> int:
+    """
+    Função para converter um número float para o formato digital de ponto flutuante,
+    suporta 32 e 16 bits
+    """
+
+    f = float(va)
+    nbits = nbmant + nbexpo + 1
+    
+    if f == 0.0:
+        return 1 << (nbmant + nbexpo - 1)
+    
+    # Converte float para representação IEEE 754 (bits)
+    if(nbits == 16):
+        ifl = struct.unpack('>H', struct.pack('>e', f))[0]
+        mant_ref = 10
+
+    elif(nbits == 32):
+        ifl = struct.unpack('!I', struct.pack('!f', f))[0]
+        mant_ref = 23
+
+
+    # Desempacotando IEEE 754
+    s = (ifl >> (nbmant + nbexpo)) & 0x1  # Bit de sinal
+    e = ((ifl >> nbmant) & ((1 << nbexpo) - 1)) - ((1 << (nbexpo - 1)) - 1) - (nbmant - 1)  # Expoente ajustado
+    m = ((ifl & ((1 << nbmant) - 1)) + (1 << nbmant)) >> 1  # Mantissa ajustada
+
+    # # Sinal
+    s = s << (nbmant + nbexpo)
+    
+    # # Expoente
+    e = e + (mant_ref - nbmant)
+    sh = 0
+    
+    while e < -math.pow(2, nbexpo - 1):
+        e += 1
+        sh += 1
+    
+    e = e & (int(math.pow(2, nbexpo)) - 1)
+    e = e << nbmant
+    
+    # Mantissa
+    if nbmant == mant_ref:
+        if ifl & 0x1:
+            m += 1  # Arredonda
+    else:
+        sh = mant_ref - nbmant + sh
+        carry = (m >> (sh - 1)) & 0x1
+        m = m >> sh
+        if carry:
+            m += 1  # Arredonda
+    
+    return s + e + m
+
 def f2mf(va: str, nbmant: int, nbexpo: int) -> int:
     f = float(va)
     
@@ -44,24 +98,23 @@ def f2mf(va: str, nbmant: int, nbexpo: int) -> int:
 
 
 
-def mf2f(in_val: int , nbmant: int, nbexp: int) -> float:
-    # Extraindo os campos da entrada
-    s = (in_val >> (nbmant + nbexp)) & 1  # Sinal
-    e = (in_val >> nbmant) & ((1 << nbexp) - 1)  # Expoente
-    m = in_val & ((1 << nbmant) - 1)  # Mantissa
+def mf2f(val: int , nbmant: int, nbexpo: int) -> float:
+    """
+    Função para converter o formato de ponto flutuante digital para float
+    """
+    
+    s = (val >> (nbmant + nbexpo)) & 0x1
+    e = (val >> nbmant) & ((1 << nbexpo) - 1)
+    m = val & ((1 << nbmant) - 1)
 
-    # Convertendo a mantissa para signed
-    sm = -m if s else m
-
-    # Complemento a dois para o expoente
-    if e & 0x80:  # Se o bit mais significativo (MSB) for 1, é negativo
-        e_complemented = -((~e + 1) & 0xFF)
+    if e & (1 << nbexpo - 1):
+        e_complemented = -((~e + 1) & (1 << nbexpo) - 1)
     else:
         e_complemented = e
 
-    num_output = sm * math.pow(2, e_complemented)
+    value = math.pow(-1, s) * m * math.pow(2, e_complemented)
 
-    return num_output, sm, e_complemented
+    return value
 
 def read_file(path:str, nb_mantissa:int, nb_expo:int):
 
